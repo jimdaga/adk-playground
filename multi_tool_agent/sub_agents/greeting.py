@@ -1,6 +1,6 @@
 from google.adk.agents import Agent
 
-from multi_tool_agent.tools import say_hello
+from ..tools import say_hello
 
 greeting_agent = Agent(
     name="greeting_agent",

@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 
-from multi_tool_agent.tools import get_weather, get_current_time
-from multi_tool_agent.sub_agents import greeting_agent, farewell_agent
+from .tools import get_weather, get_current_time
+from .sub_agents import greeting_agent, farewell_agent
 
 root_agent = Agent(
     name="weather_agent_team",

@@ -1,6 +1,6 @@
 from google.adk.agents import Agent
 
-from multi_tool_agent.tools import say_goodbye
+from ..tools import say_goodbye
 
 farewell_agent = Agent(
     name="farewell_agent",

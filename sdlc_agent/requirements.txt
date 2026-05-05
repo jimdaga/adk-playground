@@ -1,0 +1,7 @@
+google-adk[extensions]
+google-cloud-secret-manager
+requests
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-grpc
+opentelemetry-instrumentation-httpx
+opentelemetry-instrumentation-google-genai
