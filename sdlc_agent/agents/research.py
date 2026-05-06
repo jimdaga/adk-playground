@@ -4,7 +4,7 @@ from google.adk.tools.agent_tool import AgentTool
 
 research_agent = Agent(
     name="research_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description=(
         "Searches the web for technical documentation, API references, "
         "library guides, and code examples relevant to a development task. "
