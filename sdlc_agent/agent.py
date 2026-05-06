@@ -3,7 +3,6 @@ from google.adk.agents import Agent
 from .tools import (
     fetch_ai_solve_issues,
     fetch_approved_issues,
-    generate_plan,
     delegate_to_coder,
     delegate_review_fix_to_coder,
     fetch_prs_with_reviews,
@@ -12,14 +11,15 @@ from .tools import (
     post_jira_comment,
     update_jira_labels,
 )
+from .agents import research_tool, planner_tool
 
 root_agent = Agent(
     name="sdlc_agent",
     model="gemini-2.5-flash",
     description=(
         "SDLC coordinator that manages the AI-assisted development workflow. "
-        "Finds Jira issues, generates plans, delegates coding via A2A, "
-        "and handles PR review comments."
+        "Finds Jira issues, researches context, generates plans, delegates "
+        "coding via A2A, and handles PR review comments."
     ),
     instruction=(
         "You are an autonomous SDLC coordinator. On every invocation you "
@@ -52,13 +52,16 @@ root_agent = Agent(
         "comment with 'Fixed in latest push.'\n"
         "4. For comments you CANNOT evaluate or DISAGREE with:\n"
         "   - Call `add_label_to_pr` to add 'ai-needs-human-review'\n"
-        "   - Call `reply_to_review_comment` explaining why this needs human review\n\n"
+        "   - Call `reply_to_review_comment` explaining why it needs human review\n\n"
 
         "### Step 3: Plan new issues\n"
         "Call `fetch_ai_solve_issues`. For each issue found:\n"
-        "1. Call `generate_plan` with the issue_key, summary, and description\n"
-        "2. Post the plan to Jira using `post_jira_comment`\n"
-        "3. Call `update_jira_labels` to add 'ai-plan-posted' and remove 'ai-solve'\n\n"
+        "1. First call `research_agent` with a query based on the issue summary "
+        "and description to gather relevant documentation, examples, and context\n"
+        "2. Then call `planner_agent` with the issue key, summary, description, "
+        "AND the research findings — so the plan is grounded in real documentation\n"
+        "3. Post the plan to Jira using `post_jira_comment`\n"
+        "4. Call `update_jira_labels` to add 'ai-plan-posted' and remove 'ai-solve'\n\n"
 
         "### Step 4: Report\n"
         "Summarize: how many PRs opened, how many review comments addressed, "
@@ -67,6 +70,7 @@ root_agent = Agent(
 
         "## Rules\n"
         "- Process in order: approved plans → review comments → new issues.\n"
+        "- ALWAYS research before planning — better context makes better plans.\n"
         "- ALWAYS post plans to Jira and delegate coding/fixes to the coder.\n"
         "- Do not ask for confirmation — act autonomously.\n"
         "- If a tool or agent fails, report the error and continue.\n"
@@ -75,7 +79,8 @@ root_agent = Agent(
         fetch_approved_issues,
         fetch_ai_solve_issues,
         fetch_prs_with_reviews,
-        generate_plan,
+        research_tool,
+        planner_tool,
         delegate_to_coder,
         delegate_review_fix_to_coder,
         reply_to_review_comment,
