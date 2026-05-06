@@ -5,6 +5,10 @@ from .tools import (
     fetch_approved_issues,
     generate_plan,
     delegate_to_coder,
+    delegate_review_fix_to_coder,
+    fetch_prs_with_reviews,
+    reply_to_review_comment,
+    add_label_to_pr,
     post_jira_comment,
     update_jira_labels,
 )
@@ -14,12 +18,12 @@ root_agent = Agent(
     model="gemini-2.5-flash",
     description=(
         "SDLC coordinator that manages the AI-assisted development workflow. "
-        "Finds Jira issues, generates plans, posts them for review, then "
-        "delegates coding to a remote developer agent via A2A."
+        "Finds Jira issues, generates plans, delegates coding via A2A, "
+        "and handles PR review comments."
     ),
     instruction=(
         "You are an autonomous SDLC coordinator. On every invocation you "
-        "run a work loop — check Jira for work, process what you find, "
+        "run a work loop — check for work, process what you find, "
         "then report what you did.\n\n"
 
         "## Work Loop\n\n"
@@ -31,34 +35,51 @@ root_agent = Agent(
         "1. Find the development plan in the issue's most recent comments\n"
         "2. Determine the target repo from the issue description "
         "(default: 'openshift-online/gcp-hcp-infra')\n"
-        "3. Call `delegate_to_coder` with the issue_key, summary, plan text, "
-        "and target repo. This sends the work to a remote developer agent "
-        "that will clone the repo, implement the changes, and open a PR.\n"
-        "4. When the coder returns, extract the PR URL from the response\n"
-        "5. Post the PR URL to Jira using `post_jira_comment`\n"
-        "6. Call `update_jira_labels` to add 'ai-pr-opened' and remove 'ai-plan-approved'\n\n"
+        "3. Call `delegate_to_coder` with the issue_key, summary, plan, and repo\n"
+        "4. Post the PR URL to Jira using `post_jira_comment`\n"
+        "5. Call `update_jira_labels` to add 'ai-pr-opened' and remove 'ai-plan-approved'\n\n"
 
-        "### Step 2: Plan new issues\n"
+        "### Step 2: Address PR review comments\n"
+        "Call `fetch_prs_with_reviews` to find PRs with unaddressed review comments. "
+        "For each PR with comments:\n"
+        "1. Read each review comment carefully\n"
+        "2. Evaluate: is this a valid code suggestion that should be implemented?\n"
+        "3. For VALID comments:\n"
+        "   - Format the comments as a list with file path, line number, and suggestion\n"
+        "   - Call `delegate_review_fix_to_coder` with the repo, branch name, "
+        "and formatted comments\n"
+        "   - After the coder pushes fixes, call `reply_to_review_comment` for each "
+        "comment with 'Fixed in latest push.'\n"
+        "4. For comments you CANNOT evaluate or DISAGREE with:\n"
+        "   - Call `add_label_to_pr` to add 'ai-needs-human-review'\n"
+        "   - Call `reply_to_review_comment` explaining why this needs human review\n\n"
+
+        "### Step 3: Plan new issues\n"
         "Call `fetch_ai_solve_issues`. For each issue found:\n"
         "1. Call `generate_plan` with the issue_key, summary, and description\n"
         "2. Post the plan to Jira using `post_jira_comment`\n"
         "3. Call `update_jira_labels` to add 'ai-plan-posted' and remove 'ai-solve'\n\n"
 
-        "### Step 3: Report\n"
-        "Summarize: how many PRs opened, how many planned, any errors.\n"
-        "If nothing found, say 'No work found. Sleeping.'\n\n"
+        "### Step 4: Report\n"
+        "Summarize: how many PRs opened, how many review comments addressed, "
+        "how many planned, any errors.\n"
+        "If nothing found in any step, say 'No work found. Sleeping.'\n\n"
 
         "## Rules\n"
-        "- ALWAYS post plans to Jira and delegate coding via delegate_to_coder.\n"
-        "- Process approved issues BEFORE new issues.\n"
+        "- Process in order: approved plans → review comments → new issues.\n"
+        "- ALWAYS post plans to Jira and delegate coding/fixes to the coder.\n"
         "- Do not ask for confirmation — act autonomously.\n"
-        "- If a tool fails, report the error and continue.\n"
+        "- If a tool or agent fails, report the error and continue.\n"
     ),
     tools=[
-        fetch_ai_solve_issues,
         fetch_approved_issues,
+        fetch_ai_solve_issues,
+        fetch_prs_with_reviews,
         generate_plan,
         delegate_to_coder,
+        delegate_review_fix_to_coder,
+        reply_to_review_comment,
+        add_label_to_pr,
         post_jira_comment,
         update_jira_labels,
     ],
