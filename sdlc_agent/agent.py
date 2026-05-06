@@ -36,8 +36,10 @@ root_agent = Agent(
         "2. Determine the target repo from the issue description "
         "(default: 'openshift-online/gcp-hcp-infra')\n"
         "3. Call `delegate_to_coder` with the issue_key, summary, plan, and repo\n"
-        "4. Post the PR URL to Jira using `post_jira_comment`\n"
-        "5. Call `update_jira_labels` to add 'ai-pr-opened' and remove 'ai-plan-approved'\n\n"
+        "4. Extract the PR number from the returned PR URL\n"
+        "5. Call `add_label_to_pr` with the repo and PR number to add 'ai-authored'\n"
+        "6. Post the PR URL to Jira using `post_jira_comment`\n"
+        "7. Call `update_jira_labels` to add 'ai-pr-opened' and remove 'ai-plan-approved'\n\n"
 
         "### Step 2: Address PR review comments\n"
         "Call `fetch_prs_with_reviews` to find PRs with unaddressed review comments. "
