@@ -1,5 +1,6 @@
 from google.adk.agents import Agent
 
+from .callbacks import rate_limit_handler
 from .tools import (
     fetch_ai_solve_issues,
     fetch_approved_issues,
@@ -91,4 +92,5 @@ root_agent = Agent(
         update_jira_labels,
     ],
     output_key="workflow_status",
+    on_model_error_callback=rate_limit_handler,
 )

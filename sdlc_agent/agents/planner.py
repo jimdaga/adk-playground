@@ -1,6 +1,8 @@
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 
+from ..callbacks import rate_limit_handler
+
 planner_agent = Agent(
     name="planner_agent",
     model="gemini-2.5-pro",
@@ -26,6 +28,7 @@ planner_agent = Agent(
     ),
     tools=[],
     output_key="last_plan",
+    on_model_error_callback=rate_limit_handler,
 )
 
 planner_tool = AgentTool(agent=planner_agent)

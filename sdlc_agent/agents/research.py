@@ -2,6 +2,8 @@ from google.adk.agents import Agent
 from google.adk.tools import google_search
 from google.adk.tools.agent_tool import AgentTool
 
+from ..callbacks import rate_limit_handler
+
 research_agent = Agent(
     name="research_agent",
     model="gemini-2.5-flash",
@@ -24,6 +26,7 @@ research_agent = Agent(
         "Do NOT make up information. If you can't find something, say so."
     ),
     tools=[google_search],
+    on_model_error_callback=rate_limit_handler,
 )
 
 research_tool = AgentTool(agent=research_agent)
