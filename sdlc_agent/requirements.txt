@@ -1,4 +1,4 @@
-google-adk[extensions]
+google-adk[extensions,a2a]
 google-cloud-secret-manager
 requests
 opentelemetry-instrumentation-fastapi
