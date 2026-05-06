@@ -170,17 +170,7 @@ def post_jira_comment(issue_key: str, comment: str) -> dict:
     """
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
     body = {
-        "body": {
-            "version": 1,
-            "type": "doc",
-            "content": [
-                {
-                    "type": "codeBlock",
-                    "attrs": {"language": "markdown"},
-                    "content": [{"type": "text", "text": comment}],
-                }
-            ],
-        }
+        "body": _text_to_adf(comment),
     }
 
     headers = _jira_headers()
@@ -250,3 +240,74 @@ def _adf_to_text(adf: dict) -> str:
                 parts.append(inline.get("text", ""))
         parts.append("\n")
     return "".join(parts).strip()
+
+
+def _text_to_adf(text: str) -> dict:
+    """Convert plain text to Atlassian Document Format.
+
+    Handles headings (lines starting with #), links (URLs), and
+    regular paragraphs.
+    """
+    doc = {"version": 1, "type": "doc", "content": []}
+
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if stripped.startswith("### "):
+            doc["content"].append({
+                "type": "heading", "attrs": {"level": 3},
+                "content": [{"type": "text", "text": stripped[4:]}],
+            })
+        elif stripped.startswith("## "):
+            doc["content"].append({
+                "type": "heading", "attrs": {"level": 2},
+                "content": [{"type": "text", "text": stripped[3:]}],
+            })
+        elif stripped.startswith("# "):
+            doc["content"].append({
+                "type": "heading", "attrs": {"level": 1},
+                "content": [{"type": "text", "text": stripped[2:]}],
+            })
+        elif stripped.startswith("- ") or stripped.startswith("* "):
+            item_text = stripped[2:]
+            if doc["content"] and doc["content"][-1].get("type") == "bulletList":
+                doc["content"][-1]["content"].append({
+                    "type": "listItem",
+                    "content": [{"type": "paragraph", "content": _inline_nodes(item_text)}],
+                })
+            else:
+                doc["content"].append({
+                    "type": "bulletList",
+                    "content": [{
+                        "type": "listItem",
+                        "content": [{"type": "paragraph", "content": _inline_nodes(item_text)}],
+                    }],
+                })
+        else:
+            doc["content"].append({
+                "type": "paragraph",
+                "content": _inline_nodes(stripped),
+            })
+
+    return doc
+
+
+def _inline_nodes(text: str) -> list:
+    """Parse inline text for links and bold markers."""
+    import re
+    nodes = []
+    parts = re.split(r'(https?://\S+)', text)
+    for part in parts:
+        if part.startswith("http://") or part.startswith("https://"):
+            nodes.append({
+                "type": "text",
+                "text": part,
+                "marks": [{"type": "link", "attrs": {"href": part}}],
+            })
+        elif part:
+            cleaned = part.replace("**", "")
+            if cleaned:
+                nodes.append({"type": "text", "text": cleaned})
+    return nodes or [{"type": "text", "text": " "}]

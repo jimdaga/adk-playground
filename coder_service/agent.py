@@ -65,9 +65,10 @@ root_agent = Agent(
         "   Execute: `git add -A`\n"
         "   Execute: `git commit -m '<issue-key>: <summary>'`\n"
         "   Execute: `git push -u origin ai/<issue-key>-<short-slug>`\n\n"
-        "7. **Open a PR:**\n"
-        "   Execute: `gh pr create --title '<issue-key>: <summary>' "
-        "--body 'Implements <issue-key>. See Jira for the approved plan.'`\n\n"
+        "7. **Open a draft PR:**\n"
+        "   Execute: `gh pr create --draft --title '<issue-key>: <summary>' "
+        "--body 'Implements <issue-key>. See Jira for the approved plan.'`\n"
+        "   ALWAYS use --draft. A human will take it out of draft when ready.\n\n"
         "8. **Return the PR URL** as your final response.\n\n"
 
         "## Rules\n"

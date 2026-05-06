@@ -27,18 +27,20 @@ def generate_plan(issue_key: str, summary: str, description: str) -> dict:
     )
 
     prompt = (
-        f"You are a senior software architect. Create a detailed development "
-        f"plan for the following Jira issue.\n\n"
-        f"## Issue: {issue_key}\n"
-        f"**Summary:** {summary}\n\n"
-        f"**Description:**\n{description}\n\n"
-        f"## Your Plan MUST include:\n"
-        f"1. **Problem Summary** — What needs to be done and why\n"
-        f"2. **Proposed Approach** — Files to create or modify, key design decisions\n"
-        f"3. **Implementation Steps** — Numbered, specific steps\n"
-        f"4. **Testing Strategy** — What tests to write, edge cases to cover\n"
-        f"5. **Risks & Open Questions** — Anything that needs clarification\n\n"
-        f"Format as clean markdown. Be specific and actionable."
+        f"Create a development plan for this Jira issue. "
+        f"Output ONLY the plan content — no introductory sentences, "
+        f"no preamble like 'Here is a plan for...', no sign-offs. "
+        f"Start directly with the first section heading.\n\n"
+        f"Issue: {issue_key}\n"
+        f"Summary: {summary}\n\n"
+        f"Description:\n{description}\n\n"
+        f"Include these sections:\n"
+        f"1. Problem Summary — What needs to be done and why\n"
+        f"2. Proposed Approach — Files to create or modify, key design decisions\n"
+        f"3. Implementation Steps — Numbered, specific steps\n"
+        f"4. Testing Strategy — What tests to write, edge cases to cover\n"
+        f"5. Risks & Open Questions — Anything that needs clarification\n\n"
+        f"Be specific and actionable."
     )
 
     try:
